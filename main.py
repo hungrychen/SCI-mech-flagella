@@ -2,13 +2,13 @@ import serial
 import datetime
 import time
 
-SERIAL_ADDRESS = '/dev/cu.usbmodem101'
+SERIAL_ADDRESS = '/dev/cu.usbmodem1101'
 BAUD_RATE = 2.5e5
 SER_TIMEOUT = 5.
 SER_READ_AMT = 10
 STARTUP_DELAY = 1.
-MOTOR_START_DELAY = 20.
-MOTOR_STOP_DELAY = 10.
+MOTOR_START_DELAY = 30.
+MOTOR_STOP_DELAY = 30.
 TIME = datetime.datetime.now()
 FILENAME = 'mech_flagella_data_' \
   + str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
@@ -48,6 +48,15 @@ def startSerial():
 # motorSelect = input()
 # assert(motorSelect == '1' or motorSelect == '2')
 
+try:
+  testSerial = startSerial()
+except:
+  print('Serial error')
+  print('Check serial port')
+  exit
+
+testSerial.close()
+
 numRuns = int(input("Enter number of runs: "))
 assert(numRuns > 0)
 runSettings = getRunSettings(numRuns)
@@ -63,9 +72,9 @@ filenames = []
 for i in range(1, numRuns+1):
   filenames.append(FILENAME + '_' + str(i) + '.txt')
 
-for i in range(len(filenames)):
-  serialConnection = startSerial()
+serialConnection = startSerial()
 
+for i in range(len(filenames)):
   print('Now collecting data for run', i+1)
   currentFile = open(filenames[i], 'x')
 
@@ -94,7 +103,6 @@ for i in range(len(filenames)):
     writeDataToFile(SER_READ_AMT, serialConnection, currentFile)
 
   currentFile.close()
-  serialConnection.close()
-  time.sleep(.5)
+  # serialConnection.close()
 
 print('Data collection complete')
