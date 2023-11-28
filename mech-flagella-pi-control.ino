@@ -41,13 +41,13 @@ const int HX711_sck_1   = 5; //mcu > HX711 sck pin
 const int HX711_dout_2  = 11; //mcu > HX711 dout pin
 const int HX711_sck_2   = 9; //mcu > HX711 sck pin
 
-const bool LC1_REVERSED = false;
+const bool LC1_REVERSED = true;
 const bool LC2_REVERSED = true;
 
-const float CAL_VAL_1 = 904;  //995.20;
-const float CAL_VAL_2 = 954;  //1028.56;
-const long  TARE_OFFSET_1 = 8302430;
-const long  TARE_OFFSET_2 = 8304919;
+const float CAL_VAL_1 = 904;  //995.20; NOT CALIBRATED
+const float CAL_VAL_2 = 2979.08;
+// const long  TARE_OFFSET_1 = 8302430;
+// const long  TARE_OFFSET_2 = 8304919;
 const unsigned long LC_STABILIZING_DELAY = 5e3;
 
 const unsigned long SERIAL_PRINT_INTERVAL = 10;
@@ -73,6 +73,8 @@ volatile unsigned long encoderCountsB;
 
 int targetSpeedA = 0;
 int targetSpeedB = 0;
+
+bool CONTROL_ENABLE = true;
 
 const double K_P = 0.05;
 const double K_I = 0.08;
@@ -272,14 +274,16 @@ void loop() {
           switch (motorNum) {
             case 1:
               targetSpeedA = speedAmount;
+              if (!CONTROL_ENABLE) motorA.setPWM(speedAmount);
               break;
             case 2:
               targetSpeedB = speedAmount;
+              if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
               break;
           }
         }
 
-        
+
       }
     }
   }
@@ -312,16 +316,18 @@ void loop() {
       errIntA = errIntB = 0;
       motorStartedFlag = true;
     }
-    double controllerA = K_P*errA + K_I*errIntA + K_D*deA_dt;
-    pwmA = controllerA;
-    if      (pwmA > 255) pwmA = 255;
-    else if (pwmA < 0)   pwmA = 0;
-    motorA.setPWM(pwmA);
-    double controllerB = K_P*errB + K_I*errIntB + K_D*deB_dt;
-    pwmB = controllerB;
-    if      (pwmB > 255) pwmB = 255;
-    else if (pwmB < 0)   pwmB = 0;
-    motorB.setPWM(pwmB);
+    if (CONTROL_ENABLE) {
+      double controllerA = K_P*errA + K_I*errIntA + K_D*deA_dt;
+      pwmA = controllerA;
+      if      (pwmA > 255) pwmA = 255;
+      else if (pwmA < 0)   pwmA = 0;
+      motorA.setPWM(pwmA);
+      double controllerB = K_P*errB + K_I*errIntB + K_D*deB_dt;
+      pwmB = controllerB;
+      if      (pwmB > 255) pwmB = 255;
+      else if (pwmB < 0)   pwmB = 0;
+      motorB.setPWM(pwmB);
+    }
 
     prevErrA = errA;
     prevErrB = errB;
