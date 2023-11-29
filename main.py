@@ -65,8 +65,17 @@ print('Enter data collection duration (in sec): ')
 dataCollectTime = int(input())
 assert(dataCollectTime > 0)
 
-# print('Debug: settings array')
-# print(runSettings)
+print('Enter temperature (C): ')
+temp = float(input())
+
+currentFile = open(FILENAME+'_SETTINGS.txt', 'x')
+for setting in runSettings:
+  for item in setting:
+    currentFile.write(str(item) + ' ')
+  currentFile.write('\n')
+currentFile.write('Collection Duration: %i\n' % dataCollectTime)
+currentFile.write('Temperature (C): %f\n' % temp)
+currentFile.close()
 
 filenames = []
 for i in range(1, numRuns+1):
