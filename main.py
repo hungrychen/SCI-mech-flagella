@@ -2,7 +2,7 @@ import serial
 import datetime
 import time
 
-SERIAL_ADDRESS = '/dev/cu.usbmodem1101'
+SERIAL_ADDRESS = '/dev/cu.usbmodem1201'
 BAUD_RATE = 2.5e5
 SER_TIMEOUT = 5.
 SER_READ_AMT = 10
@@ -53,7 +53,8 @@ try:
 except:
   print('Serial error')
   print('Check serial port')
-  exit
+  while (1):
+    pass
 
 testSerial.close()
 
