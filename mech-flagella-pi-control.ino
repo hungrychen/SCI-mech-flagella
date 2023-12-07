@@ -19,6 +19,9 @@
 #define encoderB1 19
 #define encoderB2 18
 
+#define A_DIR false
+#define B_DIR false
+
 const char         STOP_CHAR                 = 'x';
 const char         COMMAND_DELIMITER         = ' ';
 const char *       DIR_COMMAND               = "direction";
@@ -44,8 +47,8 @@ const int HX711_sck_2   = 9; //mcu > HX711 sck pin
 const bool LC1_REVERSED = true;
 const bool LC2_REVERSED = true;
 
-const float CAL_VAL_1 = 904;  //995.20; NOT CALIBRATED
-const float CAL_VAL_2 = 2979.08;
+const float CAL_VAL_1 = 13420.;  //995.20; NOT CALIBRATED
+const float CAL_VAL_2 = 12771.94;
 // const long  TARE_OFFSET_1 = 8302430;
 // const long  TARE_OFFSET_2 = 8304919;
 const unsigned long LC_STABILIZING_DELAY = 5e3;
@@ -89,8 +92,8 @@ void encoderEventB() {
 }
 
 void setup() {
-  motorA.setDir(false);
-  motorB.setDir(false);
+  motorA.setDir(A_DIR);
+  motorB.setDir(B_DIR);
 
   pinMode(encoderA1, INPUT);
   pinMode(encoderA2, INPUT);
