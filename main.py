@@ -3,22 +3,22 @@ import datetime
 import time
 import re
 
-SERIAL_ADDRESS = '/dev/cu.usbmodem101'
+SERIAL_ADDRESS = '/dev/tty.usbmodem101'
 BAUD_RATE = 2.5e5
 SER_TIMEOUT = 5.
 SER_READ_AMT = 10
 STARTUP_DELAY = 1.
 INIT_DELAY = 12.
 TARE_TIME = 6.5
-MOTOR_START_DELAY = 30.
-MOTOR_STOP_DELAY = 30.
+MOTOR_START_DELAY = 60.
+MOTOR_STOP_DELAY = 60.
 INTERMEDIATE_TARE: bool = True
 TIME = datetime.datetime.now()
-FILENAME = 'mech_flagella_data_' \
-  + str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
-  + str(TIME.hour) + '.' + str(TIME.minute) + '.' + str(TIME.second)
+FILENAME = 'expData'
+  # + str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
+  # + str(TIME.hour) + '.' + str(TIME.minute) + '.' + str(TIME.second)
 
-DEBUG = 1
+DEBUG = 0
 if DEBUG:
   MOTOR_START_DELAY = 5.
   MOTOR_STOP_DELAY = 5.
@@ -83,6 +83,18 @@ assert(dataCollectTime > 0)
 print('Enter temperature (C): ')
 temp = float(input())
 
+print('Enter helix pitch')
+helixPitch = float(input())
+
+print('Enter helix radius')
+helixRadius = float(input())
+
+print('Enter rod radius')
+rodRadius = float(input())
+
+print('Enter axis length input')
+axisLengthInput = float(input())
+
 settingsFile = open(FILENAME+'_SETTINGS.txt', 'x')
 for setting in runSettings:
   for item in setting:
@@ -91,9 +103,24 @@ for setting in runSettings:
 settingsFile.write('Collection Duration: %i\n' % dataCollectTime)
 settingsFile.write('Temperature (C): %f\n' % temp)
 
+settingsString = '_helixPitch_' + str(helixPitch) + '_helixRadius_' + str(helixRadius) + '_rodRadius_' \
+  + str(rodRadius) + '_axisLengthInput_' + str(axisLengthInput)
 filenames = []
-for i in range(1, numRuns+1):
-  filenames.append(FILENAME + '_' + str(i) + '.txt')
+# for i in range(1, numRuns+1):
+#   filenames.append(FILENAME + '_' + str(i) + '.txt')
+# for i in range(len(runSettings)):
+prevOmega = int()
+prevTrialIndex = int()
+for i in range(len(runSettings)):
+  omega = max(runSettings[i][0], runSettings[i][2])
+  trialIndex = int(1)
+  if omega == prevOmega:
+    trialIndex = prevTrialIndex+1
+  filenames.append(FILENAME + settingsString + '_omega_' + str(omega) \
+                   + '_totalTime_' + str(dataCollectTime) + '_t_' + str(trialIndex) + '.txt')
+  
+  prevOmega = omega
+  prevTrialIndex = trialIndex
 
 serialConnection = startSerial()
 print('Wait for start:')
@@ -119,10 +146,10 @@ for i in range(len(filenames)):
     writeDataToFile(SER_READ_AMT, serialConnection, currentFile)
   
   serialConnection.write( \
-    getEncodedCommand('speed 1 = ' + str(runSettings[i][0]) + '\n'))
+    getEncodedCommand('speed 1 = ' + str(int(runSettings[i][0])/6*21) + '\n'))
   time.sleep(.5)
   serialConnection.write( \
-    getEncodedCommand('speed 2 = ' + str(runSettings[i][2]) + '\n'))
+    getEncodedCommand('speed 2 = ' + str(int(runSettings[i][2])/6*21) + '\n'))
   print('Motor on')
 
   tempTime = int(time.time())
