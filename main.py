@@ -3,20 +3,20 @@ import datetime
 import time
 import re
 
-SERIAL_ADDRESS = '/dev/tty.usbmodem101'
+SERIAL_ADDRESS = 'COM3'
 BAUD_RATE = 2.5e5
 SER_TIMEOUT = 5.
 SER_READ_AMT = 10
 STARTUP_DELAY = 1.
 INIT_DELAY = 12.
 TARE_TIME = 6.5
-MOTOR_START_DELAY = 60.
-MOTOR_STOP_DELAY = 60.
+MOTOR_START_DELAY = 20.
+MOTOR_STOP_DELAY = 100.
 INTERMEDIATE_TARE: bool = True
 TIME = datetime.datetime.now()
 FILENAME = 'expData'
-  # + str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
-  # + str(TIME.hour) + '.' + str(TIME.minute) + '.' + str(TIME.second)
+TIMESTAMP = str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
+  + str(TIME.hour) + '.' + str(TIME.minute) + '.' + str(TIME.second)
 
 DEBUG = 0
 if DEBUG:
@@ -68,7 +68,7 @@ try:
 except:
   print('Serial error')
   print('Check serial port')
-  while (1):
+  while 1:
     pass
 testSerial.close()
 
@@ -95,7 +95,7 @@ rodRadius = float(input())
 print('Enter axis length input')
 axisLengthInput = float(input())
 
-settingsFile = open(FILENAME+'_SETTINGS.txt', 'x')
+settingsFile = open(FILENAME+TIMESTAMP+'_SETTINGS.txt', 'x')
 for setting in runSettings:
   for item in setting:
     settingsFile.write(str(item) + ' ')
@@ -106,21 +106,22 @@ settingsFile.write('Temperature (C): %f\n' % temp)
 settingsString = '_helixPitch_' + str(helixPitch) + '_helixRadius_' + str(helixRadius) + '_rodRadius_' \
   + str(rodRadius) + '_axisLengthInput_' + str(axisLengthInput)
 filenames = []
-# for i in range(1, numRuns+1):
-#   filenames.append(FILENAME + '_' + str(i) + '.txt')
-# for i in range(len(runSettings)):
-prevOmega = int()
-prevTrialIndex = int()
 for i in range(len(runSettings)):
   omega = max(runSettings[i][0], runSettings[i][2])
-  trialIndex = int(1)
-  if omega == prevOmega:
-    trialIndex = prevTrialIndex+1
   filenames.append(FILENAME + settingsString + '_omega_' + str(omega) \
-                   + '_totalTime_' + str(dataCollectTime) + '_t_' + str(trialIndex) + '.txt')
-  
-  prevOmega = omega
-  prevTrialIndex = trialIndex
+                  + '_totalTime_' + str(dataCollectTime)) # add index and .txt later
+
+# prevOmega = int()
+# prevTrialIndex = int()
+# for i in range(len(runSettings)):
+#   omega = max(runSettings[i][0], runSettings[i][2])
+#   trialIndex = int(1)
+#   if omega == prevOmega:
+#     trialIndex = prevTrialIndex+1
+#   filenames.append(FILENAME + settingsString + '_omega_' + str(omega) \
+#                    + '_totalTime_' + str(dataCollectTime) + '_t_' + str(trialIndex) + '.txt')
+#   prevOmega = omega
+#   prevTrialIndex = trialIndex
 
 serialConnection = startSerial()
 print('Wait for start:')
@@ -130,7 +131,19 @@ while (int(time.time()) < tempTime + INIT_DELAY):
 
 for i in range(len(filenames)):
   print('Now collecting data for run', i+1)
-  currentFile = open(filenames[i], 'x')
+
+  fileOpenStatus = False
+  fileIndex = int(1)
+  while not fileOpenStatus:
+    try:
+      currentFile = open(filenames[i] + '_t_' + str(fileIndex) + '.txt', 'x')
+      fileOpenStatus = True
+    except FileExistsError:
+      fileIndex += 1
+      if fileIndex == 99999:
+        print('File Error')
+        while 1:
+          pass
 
   if INTERMEDIATE_TARE:
     serialConnection.write(getEncodedCommand('tare'))
