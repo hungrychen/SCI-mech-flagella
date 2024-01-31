@@ -19,8 +19,28 @@
 #define encoderB1 19
 #define encoderB2 18
 
+// Swapped motors for debug
+// #define enB 45
+// #define in3 41
+// #define in4 40
+
+// #define enA 44
+// #define in1 43
+// #define in2 42
+
+// #define encoderB1 21
+// #define encoderB2 20
+
+// #define encoderA1 19
+// #define encoderA2 18
+
 #define A_DIR false
 #define B_DIR false
+
+// A_DIR: front motor direction
+// B_DIR: rear motor direction
+// false: counter-clockwise
+// true:  clockwise
 
 const char         STOP_CHAR                 = 'x';
 const char         COMMAND_DELIMITER         = ' ';
@@ -39,16 +59,16 @@ const int          MAX_COMMAND_WORDS         = 5;
 const unsigned long   MOTOR_UPDATE_INTERVAL   = 200;
 
   // ---LOAD CELL CONSTANTS---
-const int HX711_dout_1  = 4; //mcu > HX711 dout pin
-const int HX711_sck_1   = 5; //mcu > HX711 sck pin
-const int HX711_dout_2  = 11; //mcu > HX711 dout pin
-const int HX711_sck_2   = 9; //mcu > HX711 sck pin
+const int HX711_dout_1  = 11; //mcu > HX711 dout pin
+const int HX711_sck_1   = 10; //mcu > HX711 sck pin
+const int HX711_dout_2  = 3; //mcu > HX711 dout pin
+const int HX711_sck_2   = 2; //mcu > HX711 sck pin
 
 const bool LC1_REVERSED = true;
 const bool LC2_REVERSED = true;
 
-const float CAL_VAL_1 = 13420.;  //995.20; NOT CALIBRATED
-const float CAL_VAL_2 = 12771.94;
+const float CAL_VAL_1 = 13792.30;
+const float CAL_VAL_2 = 13750.00;
 // const long  TARE_OFFSET_1 = 8302430;
 // const long  TARE_OFFSET_2 = 8304919;
 const unsigned long LC_STABILIZING_DELAY = 5e3;
@@ -77,11 +97,11 @@ volatile unsigned long encoderCountsB;
 int targetSpeedA = 0;
 int targetSpeedB = 0;
 
-bool CONTROL_ENABLE = true;
+bool CONTROL_ENABLE = 1;
 
-const double K_P = 0.05;
+const double K_P = 0.05; //0.05;
 const double K_I = 0.08;
-const double K_D = 0.0;
+const double K_D = 0.0; //0.0;
 
 void encoderEventA() {
   encoderCountsA++;
@@ -150,10 +170,11 @@ void setup() {
     F("LC1,LC1_filtered,LC2,LC2_filtered,encodedSpeedA,filteredSpeedA,encodedSpeedB,filteredSpeedB,time,DUMMY"));
   delay(LC_STABILIZING_DELAY);
 
-  attachInterrupt(digitalPinToInterrupt(encoderA1), encoderEventA, RISING);
-  attachInterrupt(digitalPinToInterrupt(encoderB1), encoderEventB, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoderA2), encoderEventA, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoderB2), encoderEventB, RISING);
 }
 
+/// @brief 
 void loop() {
   static unsigned long prevSerialPrintTime = 0;
   static unsigned long prevMotorUpdateTime = 0;
@@ -173,6 +194,7 @@ void loop() {
   unsigned long currEncoderCountB;
   static double measuredSpeedA = 0.0;
   static double measuredSpeedB = 0.0;
+  double controllerA, controllerB;
   long now = millis();
 
     // HANDLE SERIAL DATA PRINT
@@ -198,16 +220,21 @@ void loop() {
     Serial.print(now/1000., 4);
     Serial.print(DATA_DELIMITER);
       // Print speeds
-    Serial.print(measuredSpeedA);
+    Serial.print(measuredSpeedA/21*6);
     Serial.print(DATA_DELIMITER);
-    Serial.print(speed_filter_A);
+    Serial.print(speed_filter_A/21*6);
     Serial.print(DATA_DELIMITER);
-    Serial.print(measuredSpeedB);
+    Serial.print(measuredSpeedB/21*6);
     Serial.print(DATA_DELIMITER);
-    Serial.print(speed_filter_B);
+    Serial.print(speed_filter_B/21*6);
     Serial.print(DATA_DELIMITER);
       // Print constant 1
     Serial.print(F("01"));
+
+    Serial.print(DATA_DELIMITER);
+    Serial.print(pwmA);
+    Serial.print(DATA_DELIMITER);
+    Serial.print(pwmB);
 
     Serial.println();
   }
@@ -269,17 +296,29 @@ void loop() {
             || commandInput == UPDATE_COMMAND) {
         motorNum = parsedCommand[1].toInt();
       }
+        // 1-30-24: edits were made to this section to enable negative speeds
       if (commandInput == SPEED_COMMAND && wordsParsed >= SPEED_COMMAND_MIN_WORDS) {
         const String &speedCommandType = parsedCommand[2];
         int speedAmount = parsedCommand[3].toInt();
+        // Serial.println("speedAmount: " + String(speedAmount));
+        bool speedIsNegative = speedAmount < 0;
+        speedAmount = abs(speedAmount);
 
         if (speedCommandType == SET_SPEED_COMMAND) {
           switch (motorNum) {
             case 1:
+              if (speedIsNegative)
+                motorA.setDir(true);
+              else
+                motorA.setDir(false);
               targetSpeedA = speedAmount;
               if (!CONTROL_ENABLE) motorA.setPWM(speedAmount);
               break;
             case 2:
+              if (speedIsNegative)
+                motorB.setDir(true);
+              else
+                motorB.setDir(false);
               targetSpeedB = speedAmount;
               if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
               break;
@@ -320,12 +359,12 @@ void loop() {
       motorStartedFlag = true;
     }
     if (CONTROL_ENABLE) {
-      double controllerA = K_P*errA + K_I*errIntA + K_D*deA_dt;
+      controllerA = K_P*errA + K_I*errIntA + K_D*deA_dt;
       pwmA = controllerA;
       if      (pwmA > 255) pwmA = 255;
       else if (pwmA < 0)   pwmA = 0;
       motorA.setPWM(pwmA);
-      double controllerB = K_P*errB + K_I*errIntB + K_D*deB_dt;
+      controllerB = K_P*errB + K_I*errIntB + K_D*deB_dt;
       pwmB = controllerB;
       if      (pwmB > 255) pwmB = 255;
       else if (pwmB < 0)   pwmB = 0;
