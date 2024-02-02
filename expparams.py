@@ -30,6 +30,7 @@ class expparams:
 
 if __name__ == '__main__':
     test = expparams()
+    print()
     print('You have instantiated an object: ' + str(test))
     print(test.__dict__)
     print('getFileString(): ' + test.getFileString())
