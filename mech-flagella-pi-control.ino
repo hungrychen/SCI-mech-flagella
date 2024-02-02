@@ -99,9 +99,9 @@ int targetSpeedB = 0;
 
 bool CONTROL_ENABLE = 1;
 
-const double K_P = 0.05; //0.05;
+const double K_P = 0.05;
 const double K_I = 0.08;
-const double K_D = 0.0; //0.0;
+const double K_D = 0.0;
 
 void encoderEventA() {
   encoderCountsA++;
@@ -174,7 +174,6 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(encoderB2), encoderEventB, RISING);
 }
 
-/// @brief 
 void loop() {
   static unsigned long prevSerialPrintTime = 0;
   static unsigned long prevMotorUpdateTime = 0;
@@ -208,6 +207,9 @@ void loop() {
     force_filter_1 = (1-alpha)*force_filter_1 + alpha*i_1;
     force_filter_2 = (1-alpha)*force_filter_2 + alpha*i_2;
     
+    // Print time
+    Serial.print(now/1000., 4);
+    Serial.print(DATA_DELIMITER);
     Serial.print(i_1, 5);
     Serial.print(DATA_DELIMITER);  
     Serial.print(force_filter_1, 5);  
@@ -216,10 +218,8 @@ void loop() {
     Serial.print(DATA_DELIMITER);    
     Serial.print(force_filter_2, 5);
     Serial.print(DATA_DELIMITER); 
-      // Print time
-    Serial.print(now/1000., 4);
-    Serial.print(DATA_DELIMITER);
-      // Print speeds
+
+    // Print speeds
     Serial.print(measuredSpeedA/21*6);
     Serial.print(DATA_DELIMITER);
     Serial.print(speed_filter_A/21*6);
@@ -228,10 +228,10 @@ void loop() {
     Serial.print(DATA_DELIMITER);
     Serial.print(speed_filter_B/21*6);
     Serial.print(DATA_DELIMITER);
-      // Print constant 1
-    Serial.print(F("01"));
+    //   // Print constant 1
+    // Serial.print(F("01"));
 
-    Serial.print(DATA_DELIMITER);
+    // Serial.print(DATA_DELIMITER);
     Serial.print(pwmA);
     Serial.print(DATA_DELIMITER);
     Serial.print(pwmB);

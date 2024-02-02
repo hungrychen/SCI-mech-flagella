@@ -3,6 +3,8 @@ import datetime
 import time
 import re
 
+import expparams
+
 SERIAL_ADDRESS = 'COM8'
 BAUD_RATE = 2.5e5
 SER_TIMEOUT = 5.
@@ -19,8 +21,9 @@ TIMESTAMP = str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
   + str(TIME.hour) + '.' + str(TIME.minute) + '.' + str(TIME.second)
 
 CONTROL_ENABLE = 1
-
+MODE_HIGH_INITIAL = 0
 DEBUG = 0
+
 if DEBUG:
   MOTOR_START_DELAY = 5.
   MOTOR_STOP_DELAY = 5.
@@ -34,6 +37,7 @@ def getRunSettings(num: int):
     output.append(usr_input.split(' '))
   return output
 
+# Must end with newline to send command properly
 def getEncodedCommand(command: str):
   return command.encode()
 
@@ -71,8 +75,7 @@ try:
 except:
   print('Serial error')
   print('Check serial port')
-  while 1:
-    pass
+  exit(1)
 testSerial.close()
 
 numRuns = int(input("Enter number of runs: "))
@@ -83,20 +86,22 @@ print('Enter data collection duration (in sec): ')
 dataCollectTime = int(input())
 assert(dataCollectTime > 0)
 
-print('Enter temperature (C): ')
-temp = float(input())
+# print('Enter temperature (C): ')
+# temp = float(input())
 
-print('Enter helix pitch')
-helixPitch = float(input())
+# print('Enter helix pitch')
+# helixPitch = float(input())
 
-print('Enter helix radius')
-helixRadius = float(input())
+# print('Enter helix radius')
+# helixRadius = float(input())
 
-print('Enter rod radius')
-rodRadius = float(input())
+# print('Enter rod radius')
+# rodRadius = float(input())
 
-print('Enter axis length input')
-axisLengthInput = float(input())
+# print('Enter axis length input')
+# axisLengthInput = float(input())
+
+myExpParams = expparams.expparams()
 
 settingsFile = open(FILENAME+TIMESTAMP+'_SETTINGS.txt', 'x')
 for setting in runSettings:
@@ -104,17 +109,18 @@ for setting in runSettings:
     settingsFile.write(str(item) + ' ')
   settingsFile.write('\n')
 settingsFile.write('Collection Duration: %i\n' % dataCollectTime)
-settingsFile.write('Temperature (C): %f\n' % temp)
+# settingsFile.write('Temperature (C): %f\n' % temp)
 
-settingsString = '_helixPitch_' + str(helixPitch) + '_helixRadius_' + str(helixRadius) + '_rodRadius_' \
-  + str(rodRadius) + '_axisLengthInput_' + str(axisLengthInput)
+# settingsString = '_helixPitch_' + str(helixPitch) + '_helixRadius_' + str(helixRadius) + '_rodRadius_' \
+#   + str(rodRadius) + '_axisLengthInput_' + str(axisLengthInput)
+settingsString = myExpParams.getFileString()
 filenames = []
 for i in range(len(runSettings)):
   val0 = int(runSettings[i][0])
   val1 = int(runSettings[i][2])
-  use0 = abs(val0) > abs(val1)
-  omega = val0 if use0 else val1
-  filenames.append(FILENAME + settingsString + '_omega_' + str(omega) \
+  # use0 = abs(val0) > abs(val1)
+  # omega = val0 if use0 else val1
+  filenames.append(FILENAME + settingsString + '_omega1_' + str(val0) + '_omega2_' + str(val1) \
                   + '_totalTime_' + str(dataCollectTime)) # add index and .txt later
 
 # prevOmega = int()
@@ -163,18 +169,39 @@ for i in range(len(filenames)):
   tempTime = int(time.time())
   while (int(time.time()) < tempTime + MOTOR_START_DELAY):
     writeDataToFile(SER_READ_AMT, serialConnection, currentFile)
-  
+
   cmdA_val = int(runSettings[i][0])
   cmdB_val = int(runSettings[i][2])
+
+  if MODE_HIGH_INITIAL:
+    print('Run high initial')
+    if cmdA_val > 0:
+      serialConnection.write(getEncodedCommand('speed 1 = 40\n'))
+      time.sleep(.1)
+    elif cmdA_val < 0:
+      serialConnection.write(getEncodedCommand('speed 1 = -40\n'))
+      time.sleep(.1)
+    if cmdB_val > 0:
+      serialConnection.write(getEncodedCommand('speed 2 = 38\n'))
+      time.sleep(.1)
+    elif cmdB_val < 0:
+      serialConnection.write(getEncodedCommand('speed 2 = -38\n'))
+      time.sleep(.1)
+    time.sleep(1)
+    print('End high initial')
+  
   if CONTROL_ENABLE:
     cmdA_val = cmdA_val/6*21
     cmdB_val = cmdB_val/6*21
 
   serialConnection.write( \
-    getEncodedCommand('speed 1 = ' + str(cmdA_val) + '\n'))
-  time.sleep(.5)
+    getEncodedCommand('\nspeed 1 = ' + str(cmdA_val) + '\n\n'))
+  print('wrote: ' + 'speed 1 = ' + str(cmdA_val) + '\n')
+  time.sleep(.1)
   serialConnection.write( \
-    getEncodedCommand('speed 2 = ' + str(cmdB_val) + '\n'))
+    getEncodedCommand('\nspeed 2 = ' + str(cmdB_val) + '\n\n'))
+  print('wrote: ' + 'speed 2 = ' + str(cmdB_val) + '\n')
+  time.sleep(.1)
   print('Motor on')
 
   tempTime = int(time.time())
