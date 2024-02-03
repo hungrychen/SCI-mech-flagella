@@ -8,7 +8,7 @@ class Parameters:
     TOTAL_TIME = 'totalTime'  # Time per trial [s]
     NUM_TRIALS = 'numTrials'
 
-    paramTypes = dict([
+    PARAM_TYPES = dict([
         (NUM_ROD, int), (HELIX_PITCH, float),
         (HELIX_RADIUS, float), (ROD_RADIUS, float),
         (YOUNG_M, float), (POISSON, float),
@@ -17,12 +17,12 @@ class Parameters:
         (OMEGA1, float), (OMEGA2, float),
         (TOTAL_TIME, int), (NUM_TRIALS, int)
     ])
-    paramFileString = (
+    PARAM_FILE_STRING = (
         NUM_ROD, HELIX_PITCH, HELIX_RADIUS, ROD_RADIUS,
         YOUNG_M, POISSON, VISCOSITY, AXIS_LENGTH_INPUT,
         DISTANCE, DENSITY, OMEGA1, OMEGA2, TOTAL_TIME
     )
-    paramEntry = (
+    PARAM_ENTRY = (
         NUM_ROD, HELIX_PITCH, HELIX_RADIUS, ROD_RADIUS,
         YOUNG_M, POISSON, VISCOSITY, AXIS_LENGTH_INPUT,
         DISTANCE, DENSITY, NUM_TRIALS, TOTAL_TIME
@@ -33,15 +33,15 @@ class Parameters:
         self.omegaList = []
         self.fileString = str()
         
-        for param in self.paramEntry:
-            self.paramDict[param] = Parameters.paramTypes[param](input('Enter %s: ' % param))
+        for param in Parameters.PARAM_ENTRY:
+            self.paramDict[param] = Parameters.PARAM_TYPES[param](input('Enter %s: ' % param))
         
         if self.paramDict[Parameters.TOTAL_TIME] < 0:
             raise ValueError('You must enter a positive trial duration')
         if self.paramDict[Parameters.NUM_TRIALS] < 0:
             raise ValueError('You must enter a positive number of trials')
         
-        self.collectOmega(self.paramDict[Parameters.NUM_TRIALS])
+        self.collectOmegas(self.paramDict[Parameters.NUM_TRIALS])
     
     def getFileString(self, trialIndex=None):
         if trialIndex is not None:
@@ -49,7 +49,7 @@ class Parameters:
         self.updateFileString()
         return self.fileString
 
-    def collectOmega(self, trials):
+    def collectOmegas(self, trials):
         RESERVED_COLS = (1, 3)
         self.omegaList = []
         for idx in range(trials):
@@ -66,7 +66,7 @@ class Parameters:
 
     def updateFileString(self):
         self.fileString = str()
-        for param in self.paramFileString:
+        for param in Parameters.PARAM_FILE_STRING:
             self.fileString += (
                 '_' + param +
                 '_' + str(self.paramDict.get(param, 'NONE'))
