@@ -27,6 +27,7 @@ class Parameters:
         YOUNG_M, POISSON, VISCOSITY, AXIS_LENGTH_INPUT,
         DISTANCE, DENSITY, NUM_TRIALS, TOTAL_TIME
     )
+    OMEGA_1_IDX = 0; OMEGA_2_IDX = 2
 
     def __init__(self):
         self.paramDict = {}
@@ -73,10 +74,9 @@ class Parameters:
             )
 
     def updateOmegas(self, trialIndex):
-        OMEGA_1_IDX = 0; OMEGA_2_IDX = 2
         trialOmegaList = self.omegaList[trialIndex]
-        self.paramDict[Parameters.OMEGA1] = trialOmegaList[OMEGA_1_IDX]
-        self.paramDict[Parameters.OMEGA2] = trialOmegaList[OMEGA_2_IDX]
+        self.paramDict[Parameters.OMEGA1] = trialOmegaList[Parameters.OMEGA_1_IDX]
+        self.paramDict[Parameters.OMEGA2] = trialOmegaList[Parameters.OMEGA_2_IDX]
 
 if __name__ == '__main__':
     test = Parameters()

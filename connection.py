@@ -24,7 +24,8 @@ class ConnectionManager:
     def getConnection(self):
         return self.connection
 
-    def updateSpeedByTrial(self, parameters: expparams.Parameters):
+    def updateSpeedByTrial(self, parameters: expparams.Parameters, trialIndex: int):
+        speedList = parameters.omegaList[trialIndex]
         pass
 
     def updateSpeedManual(self, speeds):
