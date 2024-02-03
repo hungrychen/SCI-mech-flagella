@@ -3,7 +3,7 @@ import datetime
 import time
 import re
 
-import expparams
+from expparams import *
 
 SERIAL_ADDRESS = 'COM8'
 BAUD_RATE = 2.5e5
@@ -22,7 +22,7 @@ TIMESTAMP = str(TIME.year) + '_' + str(TIME.month) + '_' + str(TIME.day) + '_' \
 
 CONTROL_ENABLE = 1
 MODE_HIGH_INITIAL = 0
-DEBUG = 0
+DEBUG = 1
 
 if DEBUG:
   MOTOR_START_DELAY = 5.
@@ -73,10 +73,14 @@ def startSerial():
 try:
   testSerial = startSerial()
 except:
-  print('Serial error')
-  print('Check serial port')
-  exit(1)
-testSerial.close()
+  if DEBUG:
+    print('***DEBUG active. Proceeding without Serial connection***')
+  else:
+    print('Serial error')
+    print('Check serial port')
+    exit(1)
+else:
+  testSerial.close()
 
 numRuns = int(input("Enter number of runs: "))
 assert(numRuns > 0)
@@ -101,7 +105,7 @@ assert(dataCollectTime > 0)
 # print('Enter axis length input')
 # axisLengthInput = float(input())
 
-myExpParams = expparams.expparams()
+myExpParams = Parameters()
 
 settingsFile = open(FILENAME+TIMESTAMP+'_SETTINGS.txt', 'x')
 for setting in runSettings:
