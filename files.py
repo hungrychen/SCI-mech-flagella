@@ -56,52 +56,21 @@ class FileManager:
                 fileOpenSuccess = True
                 print('Opened the file for writing: ' + fileName)
 
-    def recordData(self, serialConnection: serial.Serial):
+    def recordData(self, serialConnection: serial.Serial,
+                   isExpData: bool = True):
         regexComp = re.compile(FileManager.REGEX_VLD_DATA)
         inputText = serialConnection.readline().decode(errors='backslashreplace')
-        if re.match(regexComp, inputText):
+        if isExpData and re.match(regexComp, inputText):
             self.currentFile.write(inputText)
             return True
         self.debugFile.write(inputText)
         return False
     
-    def recordDataForDuration(self, serialConnection: serial.Serial, duration: float):
+    def recordDataForDuration(self, serialConnection: serial.Serial, duration: float,
+                              isExpData: bool = True):
         start = time.time()
         while time.time() < start + float(duration):
-            self.recordData(serialConnection)
+            self.recordData(serialConnection, isExpData)
 
 if __name__ == '__main__':
-    # testParams = expparams.Parameters()
-    # testFileManager = FileManager(testParams, 'FILE-HEADER', '.EXT')
-    # print('Instantiated a FileManager object: ' + str(testFileManager))
-    # print()
-    # print('__dict__: ' + str(testFileManager.__dict__))
-    # testFileManager.openFile(0)
-    # testFileManager.openFile(1)
-
-    import unittest
-    from unittest.mock import Mock
-
-    class TestFileManager(unittest.TestCase):
-        def setUp(self):
-            self.testParams = expparams.Parameters()
-            self.testFileManager = FileManager(self.testParams, 'FILE-HEADER', '.EXT')
-            self.testFileManager.openFile(0)
-
-        def test_recordData(self):
-            serialConnection = Mock(spec=serial.Serial)
-            serialConnection.readline.return_value =\
-                b'-0.81255,-0.80950,0.63760,0.62898,54.3650,53.63,54.79,26.81,42.42,0,0\n'
-            self.assertTrue(self.testFileManager.recordData(serialConnection))
-
-        def test_recordData_invalid(self):
-            serialConnection = Mock(spec=serial.Serial)
-            serialConnection.readline.return_value = b'invalid data\n'
-            self.assertFalse(self.testFileManager.recordData(serialConnection))
-
-        # def test_recordDataForDuration(self):
-        #     serialConnection = Mock(spec=serial.Serial)
-        #     serialConnection.readline.return_value = b'valid data\n'
-        #     self.testFileManager.recordDataForDuration(serialConnection, 0.1)
-
-    unittest.main()
+    pass

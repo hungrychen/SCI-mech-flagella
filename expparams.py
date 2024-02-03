@@ -49,14 +49,19 @@ class Parameters:
             self.updateOmegas(trialIndex)
         self.updateFileString()
         return self.fileString
+    
+    def getOmegas(self, trialIndex):
+        return self.omegaList[trialIndex]
+    
+    def getNumTrials(self):
+        return self.paramDict[Parameters.NUM_TRIALS]
 
     def collectOmegas(self, trials):
         RESERVED_COLS = (1, 3)
         self.omegaList = []
         for idx in range(trials):
             inputList = input(('Enter settings for run %i' % (idx+1)) +
-                        ' using the format [speed1] [-0-] [speed2] [-0-]: ')\
-                        .split(' ')
+                ' using the format [speed1] [-0-] [speed2] [-0-]: ').split(' ')
             inputList = [int(num) for num in inputList]
             try:
                 for col in RESERVED_COLS:
@@ -79,18 +84,4 @@ class Parameters:
         self.paramDict[Parameters.OMEGA2] = trialOmegaList[Parameters.OMEGA_2_IDX]
 
 if __name__ == '__main__':
-    test = Parameters()
-    print()
-    print('You have instantiated an object: ' + str(test))
-    print()
-    print('__dict__: ' + str(test.__dict__))
-    print()
-    print(test.getFileString())
-    print()
-    print('test getFileString(): ' + test.getFileString(1))
-    print()
-    print('test getFileString(): ' + test.getFileString(2))
-    print()
-    test.updateOmegas(0)
-    print('test getFileString(): ' + test.getFileString())
-    print()
+    pass
