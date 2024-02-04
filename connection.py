@@ -44,14 +44,14 @@ class ConnectionManager:
         self.updateSpeedManual(speeds, conversionFunction)
 
     def updateSpeedManual(self, speeds, conversionFunction = None):
+        SPEED_CMD = 'speed'
+        SPEED_CMD_SET = '='
         finalSpeeds = []
         if conversionFunction is not None:
             finalSpeeds = [conversionFunction(speed) for speed in speeds]
         else:
             finalSpeeds = speeds
         finalSpeeds = [int(speed) for speed in finalSpeeds]
-        SPEED_CMD = 'speed'
-        SPEED_CMD_SET = '='
         for idx in range(len(finalSpeeds)):
             cmd = SPEED_CMD +\
                 ' ' + str(idx+1) + ' ' + SPEED_CMD_SET +\
