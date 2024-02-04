@@ -30,6 +30,8 @@ class FileManager:
             sys.stderr.write(
                 'Debug file creation error: Wait a few secs, then try again')
             exit(1)
+        else:
+            print('Opened the debug file for writing: ' + debugFileName)
     
     def __del__(self):
         if self.currentFile is not None:
@@ -66,11 +68,15 @@ class FileManager:
         self.debugFile.write(inputText)
         return False
     
+    # This will block until data recording is complete
     def recordDataForDuration(self, serialConnection: serial.Serial, duration: float,
                               isExpData: bool = True):
+        print('Recording %s data for %.1fs' %
+              (('exp' if isExpData else 'non-exp'), duration))
         start = time.time()
         while time.time() < start + float(duration):
             self.recordData(serialConnection, isExpData)
+        print('Data recording complete')
 
 if __name__ == '__main__':
     pass

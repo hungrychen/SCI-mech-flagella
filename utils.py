@@ -1,16 +1,35 @@
 import time
 
-# CONFIG SETTINGS
-VERBOSE = 'verbose'
-USE_PWM = 'pwm'
-DEFAULT_CONFIG = {
-    VERBOSE: False,
-    USE_PWM: False
+class Config:
+    # CONFIG SETTINGS
+    VERBOSE = 'verbose'
+    USE_PWM = 'pwm' # default is False: use PI control
+    SHORT_DELAY = 'shortDelay'
+    DEFAULT_CONFIG = {
+        VERBOSE: False,
+        USE_PWM: False,
+        SHORT_DELAY: False
     }
+    
+    # Delays
+    tareDelay = 5.
+    serialStartDelay = 12.
+    motorStartDelay = 20.
+    motorStopDelay = 100.
 
-# DELAYS
-TARE_DELAY = 5.
-SERIAL_START_DELAY = 12.
+    # Short delays
+    SHORT_DELAY_AMT = 5.
+    
+    def __init__(self, **kwargs):
+        self.configDict = kwargs
+        if kwargs[Config.SHORT_DELAY]:
+            self.motorStartDelay = Config.SHORT_DELAY_AMT
+            self.motorStopDelay = Config.SHORT_DELAY_AMT
+
+    def convertSpeedForCommand(self, speed):
+        if self.configDict[Config.USE_PWM]:
+            return speed
+        return speed/6*21
 
 # This will block until completed
 def wait(waitFromTime: float, waitDuration: float, verbose=False):

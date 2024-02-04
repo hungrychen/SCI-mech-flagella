@@ -22,7 +22,12 @@ class ConnectionManager:
             print('Connected to serial at %s' % self.address)
 
     def __del__(self):
+        self.setSpeedZero()
         self.connection.close()
+        print('Serial connection closed at %s' % self.address)
+
+    def setSpeedZero(self):
+        self.updateSpeedManual([0 for _ in range(2)])
 
     def getConnection(self):
         return self.connection
@@ -31,19 +36,26 @@ class ConnectionManager:
         self.connection.write((command+'\n\n').encode())
         print('Wrote the cmd to serial: ' + command)
 
-    def updateSpeedByTrial(self, parameters: expparams.Parameters, trialIndex: int):
+    def updateSpeedByTrial(self, trialIndex: int, parameters: expparams.Parameters,
+                           conversionFunction = None):
         IDX_EXTRACT = (expparams.Parameters.OMEGA_1_IDX, expparams.Parameters.OMEGA_2_IDX)
         speedList = parameters.getOmegas(trialIndex)
         speeds = [speedList[idx] for idx in IDX_EXTRACT]
-        self.updateSpeedManual(speeds)
+        self.updateSpeedManual(speeds, conversionFunction)
 
-    def updateSpeedManual(self, speeds):
+    def updateSpeedManual(self, speeds, conversionFunction = None):
+        finalSpeeds = []
+        if conversionFunction is not None:
+            finalSpeeds = [conversionFunction(speed) for speed in speeds]
+        else:
+            finalSpeeds = speeds
+        finalSpeeds = [int(speed) for speed in finalSpeeds]
         SPEED_CMD = 'speed'
         SPEED_CMD_SET = '='
-        for idx in range(len(speeds)):
+        for idx in range(len(finalSpeeds)):
             cmd = SPEED_CMD +\
                 ' ' + str(idx+1) + ' ' + SPEED_CMD_SET +\
-                ' ' + str(speeds[idx])
+                ' ' + str(finalSpeeds[idx])
             self.sendCommand(cmd)
     
     def sendTare(self):

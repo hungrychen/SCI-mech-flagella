@@ -53,8 +53,11 @@ class Parameters:
     def getOmegas(self, trialIndex):
         return self.omegaList[trialIndex]
     
-    def getNumTrials(self):
+    def getNumTrials(self) -> int:
         return self.paramDict[Parameters.NUM_TRIALS]
+    
+    def getTrialDuration(self) -> int:
+        return self.paramDict[Parameters.TOTAL_TIME]
 
     def collectOmegas(self, trials):
         RESERVED_COLS = (1, 3)
