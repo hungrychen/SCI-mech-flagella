@@ -3,7 +3,7 @@ import time
 class Config:
     # CONFIG SETTINGS
     VERBOSE = 'verbose'
-    USE_PWM = 'pwm' # default is False: use PI control
+    USE_PWM = 'usePwm' # default is False: use PI control
     SHORT_DELAY = 'shortDelay'
     DEFAULT_CONFIG = {
         VERBOSE: False,
@@ -21,6 +21,8 @@ class Config:
     SHORT_DELAY_AMT = 5.
     
     def __init__(self, **kwargs):
+        if kwargs.keys() != Config.DEFAULT_CONFIG.keys():
+            raise ValueError('Wrong keyword arguments')
         self.configDict = kwargs
         if kwargs[Config.SHORT_DELAY]:
             self.motorStartDelay = Config.SHORT_DELAY_AMT

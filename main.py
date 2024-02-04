@@ -57,3 +57,7 @@ def execTrial(trialIndex: int,
 
 if __name__ == '__main__':
     main(**utils.Config.DEFAULT_CONFIG)
+    # To run with a different configuration,
+    # call main() and pass arguments for all
+    # config settings listed in utils.Config
+    # Eg. main(verbose=True, usePwm=True, shortDelay=False)
