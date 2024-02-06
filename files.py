@@ -9,7 +9,7 @@ class FileManager:
     TRIAL_NUM_TAG = '_t_'
     DEBUG_FILE_TAG = '_DEBUG-LOG_'
     DEF_FILE_EXT = '.txt'
-    REGEX_VLD_DATA = r'^(-*\d+\.\d+,){9}(\d+,\d+)$'
+    REGEX_VLD_DATA = r'(-?\d+\.\d+,){9}(\d+,\d+)'
 
     def __init__(self, parameters: expparams.Parameters,
                  fileHeader: str, fileExtension: str = DEF_FILE_EXT):
@@ -18,6 +18,7 @@ class FileManager:
         self.fileExtension = fileExtension
         self.currentFile = None
         self.debugFile = None
+        self.regexComp = re.compile(FileManager.REGEX_VLD_DATA)
 
         timeStamp = str(datetime.datetime.now())
         timeStamp = timeStamp[:timeStamp.index('.') + 2]
@@ -28,7 +29,7 @@ class FileManager:
             self.debugFile = open(debugFileName, 'x')
         except:
             sys.stderr.write(
-                'Debug file creation error: Wait a few secs, then try again')
+                'Debug file creation error: Wait a few secs, then try again\n')
             exit(1)
         else:
             print('Opened the debug file for writing: ' + debugFileName)
@@ -60,9 +61,8 @@ class FileManager:
 
     def recordData(self, serialConnection: serial.Serial,
                    isExpData: bool = True):
-        regexComp = re.compile(FileManager.REGEX_VLD_DATA)
         inputText = serialConnection.readline().decode(errors='backslashreplace')
-        if isExpData and re.match(regexComp, inputText):
+        if isExpData and re.match(self.regexComp, inputText):
             self.currentFile.write(inputText)
             return True
         self.debugFile.write(inputText)

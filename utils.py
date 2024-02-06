@@ -31,7 +31,9 @@ class Config:
     def convertSpeedForCommand(self, speed):
         if self.configDict[Config.USE_PWM]:
             return speed
-        return speed/6*21
+        # return speed/6*21
+        # Updated for new low speed motors
+        return speed*118.43
 
 # This will block until completed
 def wait(waitFromTime: float, waitDuration: float, verbose=False):
