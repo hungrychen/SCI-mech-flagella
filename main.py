@@ -45,7 +45,7 @@ def execTrial(trialIndex: int,
 
     # Record data
     fileMgr.recordDataForDuration(conn.getConnection(),
-                                  params.getNumTrials())
+                                  params.getTrialDuration())
 
     # Turn off motors and record data
     conn.setSpeedZero()
