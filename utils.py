@@ -13,9 +13,10 @@ class Config:
     
     # Delays
     tareDelay = 5.
-    serialStartDelay = 12.
     motorStartDelay = 20.
     motorStopDelay = 100.
+    serialStartDelay = 12.
+    commandDelay = 0.7
 
     # Short delays
     SHORT_DELAY_AMT = 5.

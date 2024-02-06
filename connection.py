@@ -2,6 +2,7 @@ import expparams
 import serial
 import sys
 import time
+import utils
 
 class ConnectionManager:
     SERIAL_ADDRESS = 'COM8'
@@ -34,6 +35,7 @@ class ConnectionManager:
     
     def sendCommand(self, command: str):
         self.connection.write((command+'\n\n').encode())
+        time.sleep(utils.Config.commandDelay)
         print('Wrote the cmd to serial: ' + command)
 
     def updateSpeedByTrial(self, trialIndex: int, parameters: expparams.Parameters,
