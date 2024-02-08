@@ -5,8 +5,9 @@ class Parameters:
     VISCOSITY = 'viscosity';      AXIS_LENGTH_INPUT = 'axisLengthInput'
     DISTANCE = 'distance';        DENSITY = 'density'
     OMEGA1 = 'omega1';            OMEGA2 = 'omega2'
-    TOTAL_TIME = 'totalTime'  # Time per trial [s]
     NUM_TRIALS = 'numTrials'
+    TOTAL_TIME = 'totalTime'  # Time per trial [s]
+    DISPLAYED_PARAM = 'displayedParam'
 
     PARAM_TYPES = dict([
         (NUM_ROD, int), (HELIX_PITCH, float),
@@ -15,9 +16,10 @@ class Parameters:
         (VISCOSITY, float), (AXIS_LENGTH_INPUT, float),
         (DISTANCE, float), (DENSITY, float),
         (OMEGA1, float), (OMEGA2, float),
-        (TOTAL_TIME, int), (NUM_TRIALS, int)
+        (TOTAL_TIME, int), (NUM_TRIALS, int),
+        (DISPLAYED_PARAM, str)
     ])
-    PARAM_FILE_STRING = (
+    PARAMS_IN_FILE_STRING = (
         NUM_ROD, HELIX_PITCH, HELIX_RADIUS, ROD_RADIUS,
         YOUNG_M, POISSON, VISCOSITY, AXIS_LENGTH_INPUT,
         DISTANCE, DENSITY, OMEGA1, OMEGA2, TOTAL_TIME
@@ -25,7 +27,8 @@ class Parameters:
     PARAM_ENTRY = (
         NUM_ROD, HELIX_PITCH, HELIX_RADIUS, ROD_RADIUS,
         YOUNG_M, POISSON, VISCOSITY, AXIS_LENGTH_INPUT,
-        DISTANCE, DENSITY, NUM_TRIALS, TOTAL_TIME
+        DISTANCE, DENSITY, NUM_TRIALS, TOTAL_TIME,
+        DISPLAYED_PARAM
     )
     OMEGA_1_IDX = 0; OMEGA_2_IDX = 2
 
@@ -41,13 +44,17 @@ class Parameters:
             raise ValueError('You must enter a positive trial duration')
         if self.paramDict[Parameters.NUM_TRIALS] < 0:
             raise ValueError('You must enter a positive number of trials')
+        if not self.paramDict[Parameters.DISPLAYED_PARAM] in Parameters.PARAMS_IN_FILE_STRING:
+            raise ValueError('Invalid fileStringParam selection')
         
         self.collectOmegas(self.paramDict[Parameters.NUM_TRIALS])
     
-    def getFileString(self, trialIndex=None):
+    def getFileString(self, trialIndex=None, onlySelectedParam=False):
         if trialIndex is not None:
             self.updateOmegas(trialIndex)
-        self.updateFileString()
+        selection = self.paramDict[Parameters.DISPLAYED_PARAM] \
+            if onlySelectedParam else None
+        self.updateFileString(selection)
         return self.fileString
     
     def getOmegas(self, trialIndex):
@@ -73,9 +80,16 @@ class Parameters:
                 raise ValueError('You must enter 4 values separated by a space')
             self.omegaList.append(inputList)
 
-    def updateFileString(self):
+    def updateFileString(self, selectedParam):
         self.fileString = str()
-        for param in Parameters.PARAM_FILE_STRING:
+        searchList = []
+        if selectedParam is None:
+            searchList = Parameters.PARAMS_IN_FILE_STRING
+        elif not selectedParam in Parameters.PARAMS_IN_FILE_STRING:
+            raise ValueError('Invalid selected param')
+        else:
+            searchList.append(selectedParam)
+        for param in searchList:
             self.fileString += (
                 '_' + param +
                 '_' + str(self.paramDict.get(param, 'NONE'))
@@ -87,4 +101,7 @@ class Parameters:
         self.paramDict[Parameters.OMEGA2] = trialOmegaList[Parameters.OMEGA_2_IDX]
 
 if __name__ == '__main__':
-    pass
+    params = Parameters()
+    print(params.__dict__)
+    print(params.getFileString())
+    print(params.getFileString(onlySelectedParam=Parameters.HELIX_PITCH))

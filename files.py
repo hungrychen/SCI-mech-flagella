@@ -4,6 +4,7 @@ import time
 import sys
 import serial
 import re
+import os
 
 class FileManager:
     TRIAL_NUM_TAG = '_t_'
@@ -32,6 +33,7 @@ class FileManager:
                 'Debug file creation error: Wait a few secs, then try again\n')
             exit(1)
         else:
+            print('ALERT: The current directory is: ' + os.getcwd())
             print('Opened the debug file for writing: ' + debugFileName)
     
     def __del__(self):
@@ -49,15 +51,27 @@ class FileManager:
         while not fileOpenSuccess:
             try:
                 fileName = (self.fileHeader + 
-                            self.parameters.getFileString(trialIndex) +
-                            FileManager.TRIAL_NUM_TAG + str(fileNum) +
-                            self.fileExtension)
+                    self.parameters.getFileString(trialIndex, onlySelectedParam=True) +
+                    FileManager.TRIAL_NUM_TAG + str(fileNum) +
+                    self.fileExtension)
                 self.currentFile = open(fileName, 'x')
             except FileExistsError:
                 fileNum += 1
             else:
                 fileOpenSuccess = True
                 print('Opened the file for writing: ' + fileName)
+
+    def writeParams(self):
+        self.debugFile.write('\n***Params for Experiment***\n')
+
+        for item in [self.parameters.paramDict]:
+            writeList = [s for s in str(item).split(',')]
+            [self.debugFile.write(s+'\n') for s in writeList]
+            self.debugFile.write('\n')
+        self.debugFile.write(str(self.parameters.omegaList))
+
+        self.debugFile.write('\n***************************\n')
+        print('Wrote params to debug file')
 
     def recordData(self, serialConnection: serial.Serial,
                    isExpData: bool = True):

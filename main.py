@@ -12,6 +12,7 @@ def main(**kwargs):
     params = expparams.Parameters()
     fileMgr = files.FileManager(params, 'expData')
 
+    fileMgr.writeParams()
     print('Wait for serial connection')
     utils.wait(startTime, config.serialStartDelay,
                config.configDict[config.VERBOSE])

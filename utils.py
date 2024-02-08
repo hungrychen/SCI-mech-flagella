@@ -5,10 +5,12 @@ class Config:
     VERBOSE = 'verbose'
     USE_PWM = 'usePwm' # default is False: use PI control
     SHORT_DELAY = 'shortDelay'
+    DISABLE_ALL_DELAY = 'disableAllDelay'
     DEFAULT_CONFIG = {
         VERBOSE: False,
         USE_PWM: False,
-        SHORT_DELAY: False
+        SHORT_DELAY: False,
+        DISABLE_ALL_DELAY: False
     }
     
     # Delays
@@ -28,6 +30,12 @@ class Config:
         if kwargs[Config.SHORT_DELAY]:
             self.motorStartDelay = Config.SHORT_DELAY_AMT
             self.motorStopDelay = Config.SHORT_DELAY_AMT
+        if kwargs[Config.DISABLE_ALL_DELAY]:
+            self.tareDelay = 0
+            self.motorStartDelay = 0
+            self.motorStopDelay = 0
+            self.serialStartDelay = 0
+            self.commandDelay = 0
 
     def convertSpeedForCommand(self, speed):
         if self.configDict[Config.USE_PWM]:
