@@ -104,4 +104,4 @@ if __name__ == '__main__':
     params = Parameters()
     print(params.__dict__)
     print(params.getFileString())
-    print(params.getFileString(onlySelectedParam=Parameters.HELIX_PITCH))
+    print(params.getFileString(onlySelectedParam=True))
