@@ -68,7 +68,7 @@ const bool LC1_REVERSED = true;
 const bool LC2_REVERSED = true;
 
 const float CAL_VAL_1 = 13792.30;
-const float CAL_VAL_2 = 13750.00;
+const float CAL_VAL_2 = 12981; //13750.00;
 // const long  TARE_OFFSET_1 = 8302430;
 // const long  TARE_OFFSET_2 = 8304919;
 const unsigned long LC_STABILIZING_DELAY = 5e3;
@@ -102,6 +102,10 @@ bool CONTROL_ENABLE = 1;
 const double K_P = 0.05;
 const double K_I = 0.08;
 const double K_D = 0.0;
+
+inline double encoderSpeedToRealSpeed(double d) {
+  return d/118.43;
+}
 
 void encoderEventA() {
   encoderCountsA++;
@@ -220,13 +224,13 @@ void loop() {
     Serial.print(DATA_DELIMITER); 
 
     // Print speeds
-    Serial.print(measuredSpeedA/21*6);
+    Serial.print(encoderSpeedToRealSpeed(measuredSpeedA));
     Serial.print(DATA_DELIMITER);
-    Serial.print(speed_filter_A/21*6);
+    Serial.print(encoderSpeedToRealSpeed(speed_filter_A));
     Serial.print(DATA_DELIMITER);
-    Serial.print(measuredSpeedB/21*6);
+    Serial.print(encoderSpeedToRealSpeed(measuredSpeedB));
     Serial.print(DATA_DELIMITER);
-    Serial.print(speed_filter_B/21*6);
+    Serial.print(encoderSpeedToRealSpeed(speed_filter_B));
     Serial.print(DATA_DELIMITER);
     //   // Print constant 1
     // Serial.print(F("01"));
