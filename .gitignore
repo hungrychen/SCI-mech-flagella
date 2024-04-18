@@ -1,5 +1,9 @@
+.DS_Store
+
 test_*
 old_*
 *.txt
 *.pyc
+
 .vscode/
+__pycache__/

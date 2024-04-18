@@ -1,5 +1,6 @@
 #ifndef L298N_motorClass_h
-#define L298B_motorClass_h
+#define L298N_motorClass_h
+
 #include "Arduino.h"
 
 class Motor {
