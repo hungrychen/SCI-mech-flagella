@@ -8,8 +8,7 @@ public:
   Motor(int in1, int in2, int en); // Constructor
 
   void setPWM(int newPWM);
-
-  void run(int time); // runs irrespective of togglePwr, toggles off after
+  void run(int time);
 
   void toggleDir();
   void setDir(bool newDir);

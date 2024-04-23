@@ -1,8 +1,12 @@
 // Speed measurement and control adapted from https://www.youtube.com/watch?v=HRaZLCBFVDE
 #include <HX711_ADC.h>
 #include <util/atomic.h>
+
 #include "L298N_motorClass.h"
 #include "pinconfig.h"
+#include "commandconfig.h"
+#include "phasecontrol.h"
+#include "loadcellconfig.h"
 
 #define BAUD_RATE 2.5e5
 
@@ -14,36 +18,7 @@
 // false: counter-clockwise
 // true:  clockwise
 
-const char         STOP_CHAR                 = 'x';
-const char         COMMAND_DELIMITER         = ' ';
-const char *       DIR_COMMAND               = "direction";
-const int          DIR_COMMAND_MIN_WORDS     = 3;
-const char *       LEFT_COMMAND              = "left";
-const char *       RIGHT_COMMAND             = "right";
-const char *       SPEED_COMMAND             = "speed";
-const int          SPEED_COMMAND_MIN_WORDS   = 4;
-const char *       ADD_SPEED_COMMAND         = "+";
-const char *       SUBTRACT_SPEED_COMMAND    = "-";
-const char *       SET_SPEED_COMMAND         = "=";
-const char *       UPDATE_COMMAND            = "update";
-const char *       TARE_COMMAND              = "tare";
-const int          MAX_COMMAND_WORDS         = 5;
 const unsigned long   MOTOR_UPDATE_INTERVAL   = 200;
-
-  // ---LOAD CELL CONSTANTS---
-const int HX711_dout_1  = 11; //mcu > HX711 dout pin
-const int HX711_sck_1   = 10; //mcu > HX711 sck pin
-const int HX711_dout_2  = 3; //mcu > HX711 dout pin
-const int HX711_sck_2   = 2; //mcu > HX711 sck pin
-
-const bool LC1_REVERSED = true;
-const bool LC2_REVERSED = true;
-
-const float CAL_VAL_1 = 13792.30;
-const float CAL_VAL_2 = 12981; //13750.00;
-// const long  TARE_OFFSET_1 = 8302430;
-// const long  TARE_OFFSET_2 = 8304919;
-const unsigned long LC_STABILIZING_DELAY = 5e3;
 
 const unsigned long SERIAL_PRINT_INTERVAL = 10;
 const char DATA_DELIMITER = ',';
@@ -63,6 +38,8 @@ HX711_ADC LoadCell_2(HX711_dout_2, HX711_sck_2);
 Motor motorA(in1, in2, enA);
 Motor motorB(in3, in4, enB);
 
+PhaseControl phaseControl(&motorA, &motorB);
+
 volatile unsigned long encoderCountsA;
 volatile unsigned long encoderCountsB;
 
@@ -70,33 +47,39 @@ int targetSpeedA = 0;
 int targetSpeedB = 0;
 
 bool CONTROL_ENABLE = 1;
+bool PHASE_CONTROL_ENABLE = 1;
 
 const double K_P = 0.05;
 const double K_I = 0.08;
 const double K_D = 0.0;
+const double W_PHASE = 0.8;
 
 // constants for converting encoder counts to rpm
-// const float CPR = 12;
-// const float gearRatio = 100.37;
-// const float conversionRatio = 4./CPR*60/gearRatio;
+const float CPR = 12;
+const float gearRatio = 298.15;
+const float conversionRatio = 4./CPR*60/gearRatio;
 
 // This was observed. Need to look for exact ratio
-const float conversionRatio = 15;
+// const float conversionRatio = 15;
 
 inline double encoderSpeedToRealSpeed(double d) {
-  return d / conversionRatio;
+  return d * conversionRatio;
 }
 
 inline double realSpeedToEncoderSpeed(double d) {
-  return d * conversionRatio;
+  return d / conversionRatio;
 }
 
 void encoderEventA() {
   encoderCountsA++;
+  if (PHASE_CONTROL_ENABLE)
+    phaseControl.encoderPhaseEventA();
 }
 
 void encoderEventB() {
   encoderCountsB++;
+  if (PHASE_CONTROL_ENABLE)
+    phaseControl.encoderPhaseEventB();
 }
 
 void setup() {
@@ -155,8 +138,11 @@ void setup() {
 
   Serial.println();
   Serial.println(
-    F("LC1,LC1_filtered,LC2,LC2_filtered,encodedSpeedA,filteredSpeedA,encodedSpeedB,filteredSpeedB,time,DUMMY"));
+    F("time,LC1,LC1_filtered,LC2,LC2_filtered,encodedSpeedA,filteredSpeedA,encodedSpeedB,filteredSpeedB,phaseControlA,phaseControlB,"));
   delay(LC_STABILIZING_DELAY);
+
+  if (PHASE_CONTROL_ENABLE)
+    phaseControl.initMotorPos();
 
   attachInterrupt(digitalPinToInterrupt(encoderA2), encoderEventA, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderB2), encoderEventB, RISING);
@@ -168,6 +154,7 @@ void loop() {
 
   static bool motorStartedFlag     = false;
   static bool motorStopFlag        = false;
+  static bool phaseControlEnFlag   = false;
   static int  pwmA                 = 0;
   static int  pwmB                 = 0;
   static long prevSpeedSetTime     = 0;
@@ -223,6 +210,13 @@ void loop() {
     Serial.print(pwmA);
     Serial.print(DATA_DELIMITER);
     Serial.print(pwmB);
+    Serial.print(DATA_DELIMITER);
+
+    // Print phases
+    Serial.print(phaseControl.getCounts(0));
+    Serial.print(DATA_DELIMITER);
+    Serial.print(phaseControl.getCounts(1));
+    // Serial.print(DATA_DELIMITER);
 
     Serial.println();
   }
@@ -292,25 +286,49 @@ void loop() {
         speedAmount = realSpeedToEncoderSpeed(speedAmount);
         bool speedIsNegative = speedAmount < 0;
         speedAmount = abs(speedAmount);
+        
+        if (speedCommandType == SYNC_SPEED_COMMAND) {
+          phaseControl.initMotorPos();
+          phaseControlEnFlag = true;
+        }
+        else {
+          phaseControlEnFlag = false;
+        }
 
-        if (speedCommandType == SET_SPEED_COMMAND) {
-          switch (motorNum) {
-            case 1:
-              if (speedIsNegative)
-                motorA.setDir(true);
-              else
-                motorA.setDir(false);
-              targetSpeedA = speedAmount;
-              if (!CONTROL_ENABLE) motorA.setPWM(speedAmount);
-              break;
-            case 2:
-              if (speedIsNegative)
-                motorB.setDir(true);
-              else
-                motorB.setDir(false);
-              targetSpeedB = speedAmount;
-              if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
-              break;
+        if (speedCommandType == SET_SPEED_COMMAND || speedCommandType == SYNC_SPEED_COMMAND) {
+          // switch (motorNum) {
+          //   case 1:
+          //     if (speedIsNegative)
+          //       motorA.setDir(true);
+          //     else
+          //       motorA.setDir(false);
+          //     targetSpeedA = speedAmount;
+          //     if (!CONTROL_ENABLE) motorA.setPWM(speedAmount);
+          //     break;
+          //   case 2:
+          //     if (speedIsNegative)
+          //       motorB.setDir(true);
+          //     else
+          //       motorB.setDir(false);
+          //     targetSpeedB = speedAmount;
+          //     if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
+          //     break;
+          // }
+          if (motorNum == 1 || speedCommandType == SYNC_SPEED_COMMAND) {
+            if (speedIsNegative)
+              motorA.setDir(true);
+            else
+              motorA.setDir(false);
+            targetSpeedA = speedAmount;
+            if (!CONTROL_ENABLE) motorA.setPWM(speedAmount);
+          }
+          if (motorNum == 2 || speedCommandType == SYNC_SPEED_COMMAND) {
+            if (speedIsNegative)
+              motorB.setDir(true);
+            else
+              motorB.setDir(false);
+            targetSpeedB = speedAmount;
+            if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
           }
         }
 
@@ -343,22 +361,35 @@ void loop() {
     errIntB += errB*dt;
     double deB_dt = (errB-prevErrB) / dt;
 
+    long phaseTermA;
+    long phaseTermB;
+
     if (!motorStartedFlag) {
       errIntA = errIntB = 0;
       motorStartedFlag = true;
     }
+    if (phaseControlEnFlag) {
+      phaseControl.getCorrectionTerm(phaseTermA, phaseTermB);
+    }
     if (CONTROL_ENABLE) {
       controllerA = K_P*errA + K_I*errIntA + K_D*deA_dt;
+      if (phaseControlEnFlag)
+        controllerA += W_PHASE * phaseTermA;
+
       pwmA = controllerA;
       if      (pwmA > 255) pwmA = 255;
       else if (pwmA < 0)   pwmA = 0;
       motorA.setPWM(pwmA);
       controllerB = K_P*errB + K_I*errIntB + K_D*deB_dt;
+      if (phaseControlEnFlag)
+        controllerB += W_PHASE * phaseTermB;
+
       pwmB = controllerB;
       if      (pwmB > 255) pwmB = 255;
       else if (pwmB < 0)   pwmB = 0;
       motorB.setPWM(pwmB);
     }
+    // Serial.print("**Phase term**: " + String(phaseTermA) + ", " + String(phaseTermB));
 
     prevErrA = errA;
     prevErrB = errB;
