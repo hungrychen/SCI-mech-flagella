@@ -61,4 +61,5 @@ if __name__ == '__main__':
     # To run with a different configuration,
     # call main() and pass arguments for all
     # config settings listed in utils.Config
-    # Eg. main(verbose=True, usePwm=True, shortDelay=False)
+    # Eg.
+    # main(verbose=False, usePwm=True, shortDelay=False, disableAllDelay=True)

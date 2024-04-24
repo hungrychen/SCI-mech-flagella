@@ -42,7 +42,7 @@ class Config:
             return speed
         # return speed/6*21
         # Updated for new low speed motors
-        return speed*118.43
+        return speed
 
 # This will block until completed
 def wait(waitFromTime: float, waitDuration: float, verbose=False):

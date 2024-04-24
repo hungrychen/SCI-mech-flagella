@@ -1,8 +1,6 @@
 #ifndef L298N_motorClass_h
 #define L298N_motorClass_h
 
-#include "Arduino.h"
-
 class Motor {
 public:
   Motor(int in1, int in2, int en); // Constructor

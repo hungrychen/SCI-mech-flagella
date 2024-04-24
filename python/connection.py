@@ -5,7 +5,7 @@ import time
 import utils
 
 class ConnectionManager:
-    SERIAL_ADDRESS = 'COM8'
+    SERIAL_ADDRESS = 'COM7'
     BAUD_RATE = 2.5e5
     TIMEOUT = 5.
 
@@ -48,17 +48,24 @@ class ConnectionManager:
     def updateSpeedManual(self, speeds, conversionFunction = None):
         SPEED_CMD = 'speed'
         SPEED_CMD_SET = '='
+        SPEED_SYNC = 's'
+
         finalSpeeds = []
         if conversionFunction is not None:
             finalSpeeds = [conversionFunction(speed) for speed in speeds]
         else:
             finalSpeeds = speeds
         finalSpeeds = [int(speed) for speed in finalSpeeds]
-        for idx in range(len(finalSpeeds)):
-            cmd = SPEED_CMD +\
-                ' ' + str(idx+1) + ' ' + SPEED_CMD_SET +\
-                ' ' + str(finalSpeeds[idx])
+
+        # Invoke the sync command if the speeds are the same
+        if finalSpeeds[0] == finalSpeeds[1]:
+            cmd = SPEED_CMD + ' 0 ' + SPEED_SYNC + ' ' + str(finalSpeeds[0])
             self.sendCommand(cmd)
+        else:
+            for idx in range(len(finalSpeeds)):
+                cmd = (SPEED_CMD + ' ' + str(idx+1) + ' '
+                       + SPEED_CMD_SET + ' ' + str(finalSpeeds[idx]))
+                self.sendCommand(cmd)
     
     def sendTare(self):
         TARE_CMD = 'tare'

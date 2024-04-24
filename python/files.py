@@ -10,7 +10,7 @@ class FileManager:
     TRIAL_NUM_TAG = '_t_'
     DEBUG_FILE_TAG = '_DEBUG-LOG_'
     DEF_FILE_EXT = '.txt'
-    REGEX_VLD_DATA = r'(-?\d+\.\d+,){9}(\d+,\d+)'
+    REGEX_VLD_DATA = r'(-?\d+\.\d+,){9}(\d+,){3}(\d+)'
 
     def __init__(self, parameters: expparams.Parameters,
                  fileHeader: str, fileExtension: str = DEF_FILE_EXT):
