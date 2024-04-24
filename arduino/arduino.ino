@@ -7,6 +7,8 @@
 #include "commandconfig.h"
 #include "phasecontrol.h"
 #include "loadcellconfig.h"
+#include "controlconfig.h"
+#include "encoderconvs.h"
 
 #define BAUD_RATE 2.5e5
 
@@ -38,37 +40,13 @@ HX711_ADC LoadCell_2(HX711_dout_2, HX711_sck_2);
 Motor motorA(in1, in2, enA);
 Motor motorB(in3, in4, enB);
 
-PhaseControl phaseControl(&motorA, &motorB);
+PhaseControl phaseControl;
 
 volatile unsigned long encoderCountsA;
 volatile unsigned long encoderCountsB;
 
 int targetSpeedA = 0;
 int targetSpeedB = 0;
-
-bool CONTROL_ENABLE = 1;
-bool PHASE_CONTROL_ENABLE = 1;
-
-const double K_P = 0.05;
-const double K_I = 0.08;
-const double K_D = 0.0;
-const double W_PHASE = 0.8;
-
-// constants for converting encoder counts to rpm
-const float CPR = 12;
-const float gearRatio = 298.15;
-const float conversionRatio = 4./CPR*60/gearRatio;
-
-// This was observed. Need to look for exact ratio
-// const float conversionRatio = 15;
-
-inline double encoderSpeedToRealSpeed(double d) {
-  return d * conversionRatio;
-}
-
-inline double realSpeedToEncoderSpeed(double d) {
-  return d / conversionRatio;
-}
 
 void encoderEventA() {
   encoderCountsA++;
@@ -361,8 +339,8 @@ void loop() {
     errIntB += errB*dt;
     double deB_dt = (errB-prevErrB) / dt;
 
-    long phaseTermA;
-    long phaseTermB;
+    double phaseTermA;
+    double phaseTermB;
 
     if (!motorStartedFlag) {
       errIntA = errIntB = 0;
@@ -381,15 +359,20 @@ void loop() {
       else if (pwmA < 0)   pwmA = 0;
       motorA.setPWM(pwmA);
       controllerB = K_P*errB + K_I*errIntB + K_D*deB_dt;
+      // Serial.print("controllerB, bef: ");
+      // Serial.print(controllerB);
       if (phaseControlEnFlag)
         controllerB += W_PHASE * phaseTermB;
+      // Serial.print("; phaseTermB: ");
+      // Serial.print(phaseTermB);
+      // Serial.print("; controllerB, aft: ");
+      // Serial.println(controllerB);
 
       pwmB = controllerB;
       if      (pwmB > 255) pwmB = 255;
       else if (pwmB < 0)   pwmB = 0;
       motorB.setPWM(pwmB);
     }
-    // Serial.print("**Phase term**: " + String(phaseTermA) + ", " + String(phaseTermB));
 
     prevErrA = errA;
     prevErrB = errB;

@@ -1,11 +1,9 @@
 #include "phasecontrol.h"
 
 #include <Arduino.h>
-#include "L298N_motorClass.h"
+#include "encoderconvs.h"
 
-PhaseControl::PhaseControl(Motor *motorA, Motor *motorB) {
-  m_motor[0] = motorA;
-  m_motor[1] = motorB;
+PhaseControl::PhaseControl() {
 }
 
 PhaseControl::~PhaseControl() {
@@ -32,18 +30,26 @@ unsigned long PhaseControl::getCounts(int motorIdx) const {
   return m_counts[motorIdx];
 }
 
-void PhaseControl::getCorrectionTerm(long &termA, long &termB) const {
-  long diff = abs(m_counts[0] - m_counts[1]);
-  if (m_counts[0] < m_counts[1]) {
-    termA = diff;
-    termB = -diff;
+void PhaseControl::getCorrectionTerm(double &termA, double &termB) const {
+  double diffInRounds = getCoeff(1) - getCoeff(0);
+  double activationRes = activation(diffInRounds);
+  termA = activationRes;
+  termB = -activationRes;
+}
+
+double PhaseControl::getCoeff(int motorIdx) const {
+  if (motorIdx < 0 || motorIdx > 1) {
+    Serial.println("ERROR: PhaseControl::getCoeff: invalid idx");
+    exit(1);
   }
-  else if (m_counts[0] > m_counts[1]) {
-    termA = -diff;
-    termB = diff;
-  }
-  else {
-    termA = 0;
-    termB = 0;
-  }
+  double phase =  m_counts[motorIdx] / encoderToPhase;
+  return phase;
+}
+
+double PhaseControl::activation(double coeff) const {
+  if (coeff > CUTOFF)
+    return CUTOFF;
+  if (coeff < -CUTOFF)
+    return -CUTOFF;
+  return coeff;
 }

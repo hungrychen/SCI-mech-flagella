@@ -1,22 +1,24 @@
 #ifndef PHASECONTROL_H
 #define PHASECONTROL_H
 
-class Motor;
-
 class PhaseControl {
 public:
-  PhaseControl(Motor *motorA, Motor *motorB);
+  PhaseControl();
   ~PhaseControl();
   void initMotorPos();
   void encoderPhaseEventA();
   void encoderPhaseEventB();
   unsigned long getCounts(int motorIdx) const;
-  void getCorrectionTerm(long &termA, long &termB) const;
+  void getCorrectionTerm(double &termA, double &termB) const;
 
 private:
-  Motor *m_motor[2];
-  volatile unsigned long m_counts[2];
+  static const double CUTOFF = 2.0;
+  static const int NUM_MOTORS = 2;
 
+  volatile unsigned long m_counts[NUM_MOTORS];
+
+  double getCoeff(int motorIdx) const;
+  double activation(double coeff) const;
 };
 
 #endif // PHASECONTROL_H
