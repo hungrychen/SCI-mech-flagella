@@ -13,6 +13,7 @@ const char *       ADD_SPEED_COMMAND         = "+";
 const char *       SUBTRACT_SPEED_COMMAND    = "-";
 const char *       SET_SPEED_COMMAND         = "=";
 const char *       SYNC_SPEED_COMMAND        = "s";
+const char *       SYNC_OPP_COMMAND          = "o";
 const char *       UPDATE_COMMAND            = "update";
 const char *       TARE_COMMAND              = "tare";
 const int          MAX_COMMAND_WORDS         = 5;

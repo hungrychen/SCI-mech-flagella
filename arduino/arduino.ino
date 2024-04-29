@@ -71,17 +71,6 @@ void setup() {
 
   Serial.begin(BAUD_RATE);
   Serial.println();
-  
-  // Old speed input
-    // Serial.print(F("Enter Speed A: "));
-    // while (!Serial.available());
-    // String targetSpeedA_str = Serial.readStringUntil('\n');
-    // targetSpeedA = targetSpeedA_str.toInt();
-    // Serial.print(F("Enter Speed B: "));
-    // while (!Serial.available());
-    // String targetSpeedB_str = Serial.readStringUntil('\n');
-    // targetSpeedB = targetSpeedB_str.toInt();
-  //
 
   LoadCell_1.begin();
   LoadCell_2.begin();
@@ -265,7 +254,7 @@ void loop() {
         bool speedIsNegative = speedAmount < 0;
         speedAmount = abs(speedAmount);
         
-        if (speedCommandType == SYNC_SPEED_COMMAND) {
+        if (speedCommandType == SYNC_SPEED_COMMAND || speedCommandType == SYNC_OPP_COMMAND) {
           phaseControl.initMotorPos();
           phaseControlEnFlag = true;
         }
@@ -274,24 +263,6 @@ void loop() {
         }
 
         if (speedCommandType == SET_SPEED_COMMAND || speedCommandType == SYNC_SPEED_COMMAND) {
-          // switch (motorNum) {
-          //   case 1:
-          //     if (speedIsNegative)
-          //       motorA.setDir(true);
-          //     else
-          //       motorA.setDir(false);
-          //     targetSpeedA = speedAmount;
-          //     if (!CONTROL_ENABLE) motorA.setPWM(speedAmount);
-          //     break;
-          //   case 2:
-          //     if (speedIsNegative)
-          //       motorB.setDir(true);
-          //     else
-          //       motorB.setDir(false);
-          //     targetSpeedB = speedAmount;
-          //     if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
-          //     break;
-          // }
           if (motorNum == 1 || speedCommandType == SYNC_SPEED_COMMAND) {
             if (speedIsNegative)
               motorA.setDir(true);
@@ -307,6 +278,17 @@ void loop() {
               motorB.setDir(false);
             targetSpeedB = speedAmount;
             if (!CONTROL_ENABLE) motorB.setPWM(speedAmount);
+          }
+        }
+        else if (speedCommandType == SYNC_OPP_COMMAND) {
+          motorA.setDir(!speedIsNegative);
+          targetSpeedA = speedAmount;
+          motorB.setDir(speedIsNegative);
+          targetSpeedB = speedAmount;
+
+          if (!CONTROL_ENABLE) {
+            Serial.println("ERROR: SYNC_OPP only works with PI control enabled");
+            exit(1);
           }
         }
 

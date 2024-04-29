@@ -49,6 +49,7 @@ class ConnectionManager:
         SPEED_CMD = 'speed'
         SPEED_CMD_SET = '='
         SPEED_SYNC = 's'
+        OPP_SYNC = 'o'
 
         finalSpeeds = []
         if conversionFunction is not None:
@@ -60,6 +61,10 @@ class ConnectionManager:
         # Invoke the sync command if the speeds are the same
         if finalSpeeds[0] == finalSpeeds[1]:
             cmd = SPEED_CMD + ' 0 ' + SPEED_SYNC + ' ' + str(finalSpeeds[0])
+            self.sendCommand(cmd)
+        # If speeds are equal in magnitude but opposite, invoke reverse sync
+        elif finalSpeeds[0] == -finalSpeeds[1]:
+            cmd = SPEED_CMD + ' 0 ' + OPP_SYNC + ' ' + str(finalSpeeds[1])
             self.sendCommand(cmd)
         else:
             for idx in range(len(finalSpeeds)):

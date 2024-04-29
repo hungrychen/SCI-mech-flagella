@@ -4,6 +4,8 @@
 #include "encoderconvs.h"
 
 PhaseControl::PhaseControl() {
+  // m_counts[0] = 0;
+  // m_counts[1] = 0;
 }
 
 PhaseControl::~PhaseControl() {
@@ -12,6 +14,12 @@ PhaseControl::~PhaseControl() {
 void PhaseControl::initMotorPos() {
   m_counts[0] = 0;
   m_counts[1] = 0;
+
+  // unsigned long leftover = m_counts[1] - m_counts[0];
+  // leftover = abs(leftover);
+  // if (m_counts[1] > m_counts[0]) {
+  //   m_counts
+  // }
 }
 
 void PhaseControl::encoderPhaseEventA() {
