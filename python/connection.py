@@ -12,20 +12,24 @@ class ConnectionManager:
     def __init__(self, baud=BAUD_RATE, address=SERIAL_ADDRESS):
         self.baud = baud
         self.address = address
+        self.connectionInitialized = False
         try:
             self.connection = serial.Serial(port=address,
                 baudrate=baud, timeout=ConnectionManager.TIMEOUT)
         except:
             sys.stderr.write('***\nSerial connection error, check serial connection\n***\n')
-            time.sleep(3.)
-            raise ConnectionError()
+            # time.sleep(5.)
+            # raise ConnectionError()
+            exit(1)
         else:
             print('Connected to serial at %s' % self.address)
+            self.connectionInitialized = True
 
     def __del__(self):
-        self.setSpeedZero()
-        self.connection.close()
-        print('Serial connection closed at %s' % self.address)
+        if self.connectionInitialized:
+            self.setSpeedZero()
+            self.connection.close()
+            print('Serial connection closed at %s' % self.address)
 
     def setSpeedZero(self):
         self.updateSpeedManual([0 for _ in range(2)])

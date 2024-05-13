@@ -13,12 +13,13 @@ class FileManager:
     REGEX_VLD_DATA = r'(-?\d+\.\d+,){9}(\d+,){3}(\d+)'
 
     def __init__(self, parameters: expparams.Parameters,
-                 fileHeader: str, fileExtension: str = DEF_FILE_EXT):
+                 fileHeader: str, writePath: str = '.', fileExtension: str = DEF_FILE_EXT):
         self.parameters = parameters
         self.fileHeader = fileHeader
         self.fileExtension = fileExtension
         self.currentFile = None
         self.debugFile = None
+        self.writePath = writePath + '/'
         self.regexComp = re.compile(FileManager.REGEX_VLD_DATA)
 
         timeStamp = str(datetime.datetime.now())
@@ -27,7 +28,7 @@ class FileManager:
         debugFileName = (fileHeader + FileManager.DEBUG_FILE_TAG +
                          timeStamp + fileExtension)
         try:
-            self.debugFile = open(debugFileName, 'x')
+            self.debugFile = open(self.writePath + debugFileName, 'x')
         except:
             sys.stderr.write(
                 'Debug file creation error: Wait a few secs, then try again\n')
@@ -35,7 +36,7 @@ class FileManager:
         else:
             print('ALERT: The current directory is: ' + os.getcwd())
             print('Opened the debug file for writing: ' + debugFileName)
-    
+
     def __del__(self):
         if self.currentFile is not None:
             self.currentFile.close()
@@ -54,11 +55,12 @@ class FileManager:
                     self.parameters.getFileString(trialIndex, onlySelectedParam=True) +
                     FileManager.TRIAL_NUM_TAG + str(fileNum) +
                     self.fileExtension)
-                self.currentFile = open(fileName, 'x')
+                self.currentFile = open(self.writePath + fileName, 'x')
             except FileExistsError:
                 fileNum += 1
             else:
                 fileOpenSuccess = True
+                self.currentFilePath = self.writePath + fileName
                 print('Opened the file for writing: ' + fileName)
 
     def writeParams(self):
@@ -81,7 +83,7 @@ class FileManager:
             return True
         self.debugFile.write(inputText)
         return False
-    
+
     # This will block until data recording is complete
     def recordDataForDuration(self, serialConnection: serial.Serial, duration: float,
                               isExpData: bool = True):
@@ -91,6 +93,9 @@ class FileManager:
         while time.time() < start + float(duration):
             self.recordData(serialConnection, isExpData)
         print('Data recording complete')
+
+    def getCurrentFilePath(self) -> str:
+        return self.currentFilePath
 
 if __name__ == '__main__':
     pass

@@ -3,6 +3,8 @@ import files
 import connection
 import utils
 import time
+import sys
+import os
 
 # Check utils for config settings
 def main(**kwargs):
@@ -10,7 +12,11 @@ def main(**kwargs):
     conn = connection.ConnectionManager()
     startTime = time.time()
     params = expparams.Parameters()
-    fileMgr = files.FileManager(params, 'expData')
+    writePath = sys.argv[1]
+    # print('WRITEPATH:', writePath)
+    assert os.path.isdir(writePath)
+    fileMgr = files.FileManager(params, 'expData', writePath)
+    print('Set the write path to:', writePath)
 
     fileMgr.writeParams()
     print('Wait for serial connection')
