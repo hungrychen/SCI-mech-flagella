@@ -1,4 +1,7 @@
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+import os
 
 class Config:
     # CONFIG SETTINGS
@@ -51,3 +54,23 @@ def wait(waitFromTime: float, waitDuration: float, verbose=False):
         if verbose:
             print('Waiting, %.1fs remaining' % (readyTime-time.time()))
         time.sleep(0.5)
+
+
+def previewData(filePath: str):
+    data = np.loadtxt(filePath, delimiter=",")
+    t = data[:,0]
+    lc1 = data[:,1]
+    lc2 = data[:,3]
+    previewFileName = 'preview-0'
+    previewFileExt = 'png'
+    while os.path.isfile('.'.join((previewFileName, previewFileExt))):
+        l = previewFileName.split('-')
+        l[-1] = str(int(l[-1]) + 1)
+        previewFileName = '-'.join(l)
+
+    plt.clf()
+    plt.plot(t, lc1, label='lc1')
+    plt.plot(t, lc2, label='lc2')
+    plt.legend()
+    plt.grid()
+    plt.savefig('.'.join((previewFileName, previewFileExt)))

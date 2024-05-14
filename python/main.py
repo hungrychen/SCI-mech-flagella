@@ -59,6 +59,9 @@ def execTrial(trialIndex: int,
     fileMgr.recordDataForDuration(conn.getConnection(),
                                   config.motorStopDelay)
     
+    # Preview the data
+    utils.previewData(fileMgr.getCurrentFilePath())
+    
     print('Completed trial %i' % (trialIndex+1))
     print('*****************')
 
@@ -68,4 +71,4 @@ if __name__ == '__main__':
     # call main() and pass arguments for all
     # config settings listed in utils.Config
     # Eg.
-    # main(verbose=False, usePwm=True, shortDelay=False, disableAllDelay=True)
+    # main(verbose=False, usePwm=True, shortDelay=True, disableAllDelay=False)

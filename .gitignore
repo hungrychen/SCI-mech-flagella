@@ -5,6 +5,7 @@ old_*
 *.txt
 *.pyc
 *.zip
+*.png
 
 .vscode/
 __pycache__/
