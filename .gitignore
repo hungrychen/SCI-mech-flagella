@@ -9,3 +9,7 @@ old_*
 
 .vscode/
 __pycache__/
+distance/
+expData_speed/
+New\ folder/
+phase/
