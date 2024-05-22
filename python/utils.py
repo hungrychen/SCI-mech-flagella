@@ -61,7 +61,7 @@ def previewData(filePath: str):
     t = data[:,0]
     lc1 = data[:,1]
     lc2 = data[:,3]
-    previewFileName = 'preview-0'
+    previewFileName = 'preview-1'
     previewFileExt = 'png'
     dirname = os.path.dirname(filePath)
 
