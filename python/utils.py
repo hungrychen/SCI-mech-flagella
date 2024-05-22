@@ -63,7 +63,9 @@ def previewData(filePath: str):
     lc2 = data[:,3]
     previewFileName = 'preview-0'
     previewFileExt = 'png'
-    while os.path.isfile('.'.join((previewFileName, previewFileExt))):
+    dirname = os.path.dirname(filePath)
+
+    while os.path.isfile(dirname + '/' + '.'.join((previewFileName, previewFileExt))):
         l = previewFileName.split('-')
         l[-1] = str(int(l[-1]) + 1)
         previewFileName = '-'.join(l)
@@ -73,4 +75,4 @@ def previewData(filePath: str):
     plt.plot(t, lc2, label='lc2')
     plt.legend()
     plt.grid()
-    plt.savefig('.'.join((previewFileName, previewFileExt)))
+    plt.savefig(dirname + '/' + '.'.join((previewFileName, previewFileExt)))
