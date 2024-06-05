@@ -56,7 +56,7 @@ def wait(waitFromTime: float, waitDuration: float, verbose=False):
         time.sleep(0.5)
 
 
-def previewData(filePath: str):
+def previewData(filePath: str, useSameFileName: bool):
     data = np.loadtxt(filePath, delimiter=",")
     t = data[:,0]
     lc1 = data[:,1]
@@ -69,6 +69,9 @@ def previewData(filePath: str):
         l = previewFileName.split('-')
         l[-1] = str(int(l[-1]) + 1)
         previewFileName = '-'.join(l)
+    
+    if useSameFileName:
+        previewFileName = os.path.basename(filePath).split(".txt")[0]
 
     plt.clf()
     plt.plot(t, lc1, label='lc1')

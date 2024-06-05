@@ -60,7 +60,7 @@ def execTrial(trialIndex: int,
                                   config.motorStopDelay)
     
     # Preview the data
-    utils.previewData(fileMgr.getCurrentFilePath())
+    utils.previewData(fileMgr.getCurrentFilePath(), True)
     
     print('Completed trial %i' % (trialIndex+1))
     print('*****************')
