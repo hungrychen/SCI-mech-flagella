@@ -2,7 +2,8 @@
 #define ENCODERCONVS_H
 
 const float CPR = 12;
-const float gearRatio = 298.15;
+// const float gearRatio = 298.15;
+const float gearRatio = 986.41;
 const float encoderToPhase = CPR/4.*gearRatio;
 const float encoderPMtoRPM = encoderToPhase/60.;
 

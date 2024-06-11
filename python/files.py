@@ -74,6 +74,7 @@ class FileManager:
 
         self.debugFile.write('\n***************************\n')
         print('Wrote params to debug file')
+        self.debugFile.flush()
 
     def recordData(self, serialConnection: serial.Serial,
                    isExpData: bool = True):
